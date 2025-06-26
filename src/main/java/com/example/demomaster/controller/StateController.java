@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,12 +57,14 @@ public class StateController {
        return stateService.searchStateDeatails(searchDTO, page, size).getContent();
     }
 
-//    @PostMapping("/import")
-//    @Operation(summary = "Insert state details",
-//            description = "Insert state details from the provided excel sheet")
-//    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file){
-//        return.state
-//    }
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    @Operation(summary = "Import state details",
+            description = "Import state details from the provided excel sheet")
+    public ResponseEntity<String> importFromExcel(@RequestParam("file") MultipartFile file) throws IOException{
+        stateService.importFromExcel(file);
+        return ResponseEntity.ok("Imported Successfully");
+    }
+
 
     @PutMapping("{stateId}")
     @Operation(summary = "Update state details",

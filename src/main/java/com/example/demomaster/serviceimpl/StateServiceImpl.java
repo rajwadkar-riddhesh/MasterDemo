@@ -18,9 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -60,7 +61,6 @@ public class StateServiceImpl implements StateService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Data rows
             int rowIdx = 1;
             for (StateEntity state : states) {
                 Row row = sheet.createRow(rowIdx++);
@@ -68,7 +68,6 @@ public class StateServiceImpl implements StateService {
                 row.createCell(1).setCellValue(state.getStateName());
             }
 
-            // Set response for file download
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition", "attachment; filename=states.xlsx");
 
@@ -89,6 +88,76 @@ public class StateServiceImpl implements StateService {
         Page<StateEntity> entities = stateRepository.findAll(spec, pageable);
         return entities.map(stateMapper::toDTO);
     }
+
+    public void importFromExcel(MultipartFile file) throws IOException{
+        if (file.isEmpty()){
+            throw new IllegalArgumentException("Excel file is empty");
+        }
+
+        String filename = file.getOriginalFilename();
+        if(filename == null || !filename.toLowerCase().endsWith(".xlsx")){
+            throw new IllegalArgumentException("Only .xlsx files are supported");
+        }
+
+        try(Workbook workbook = new XSSFWorkbook(file.getInputStream())){
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+
+            boolean headerSkipped = false;
+
+            List<StateEntity> batch = new ArrayList<>();
+
+            for (Row row : sheet) {
+                if (!headerSkipped) {
+                    headerSkipped = true;
+                    continue;
+                }
+                if (isRowEmpty(row)) continue;
+
+                Cell idCell = row.getCell(0);
+                Cell nameCell = row.getCell(1);
+
+                String idText = idCell == null ? "" : formatter.formatCellValue(idCell).trim();
+                String nameText = nameCell == null ? "" : formatter.formatCellValue(nameCell).trim();
+
+                if (nameText.isBlank()) continue;
+
+                StateEntity entity;
+
+                if (!idText.isBlank()) {
+                    try {
+                        Long id = Long.valueOf(idText);
+                        entity = stateRepository.findById(id).orElse(null);
+                        if (entity == null) {
+                            entity = new StateEntity();
+                            // Do NOT set ID manually if entity is new
+                        }
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("Invalid ID format in Excel row: " + idText);
+                    }
+                } else {
+                    entity = new StateEntity();
+                }
+                entity.setStateName(nameText);
+                batch.add(entity);
+            }
+            stateRepository.saveAll(batch);
+        }
+    }
+//      public void importToExcel(MultipartFile file){
+//
+//      }
+
+    private boolean isRowEmpty(Row row) {
+        if (row == null){
+            return true;
+        }
+        for (Cell cell : row){
+                if (cell != null && cell.getCellType() != CellType.BLANK) return false;
+        }
+        return true;
+    }
+
 
     public StateDTO updateStateDetails(Long stateId, StateCreateDTO stateCreateDTO) {
         StateEntity existingState = stateRepository.findById(stateId)
