@@ -80,11 +80,11 @@ public class StateEntity {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getDeleteAt() {
+    public LocalDateTime getDeletedAt() {
         return deletedAt;
     }
 
-    public void setDeleteAt(LocalDateTime deletedAt) {
+    public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
 

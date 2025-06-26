@@ -7,9 +7,11 @@ import com.example.demomaster.enums.StateEnum;
 import com.example.demomaster.serviceimpl.StateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -26,6 +28,13 @@ public class StateController {
     public List<StateDTO> getAllStateDetails(@RequestParam(defaultValue = "0") int page,
                                              @RequestParam(defaultValue = "5") int size){
         return stateService.getAllStateDetails(page,size).getContent();
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Export all state details",
+            description = "Exports all state details to excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException {
+        stateService.exportToExcel(response);
     }
 
     @PostMapping
@@ -45,6 +54,13 @@ public class StateController {
     ) {
        return stateService.searchStateDeatails(searchDTO, page, size).getContent();
     }
+
+//    @PostMapping("/import")
+//    @Operation(summary = "Insert state details",
+//            description = "Insert state details from the provided excel sheet")
+//    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file){
+//        return.state
+//    }
 
     @PutMapping("{stateId}")
     @Operation(summary = "Update state details",

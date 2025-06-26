@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-06-23T18:44:32+0530",
+    date = "2025-06-25T16:15:22+0530",
     comments = "version: 1.6.3, compiler: javac, environment: Java 24.0.1 (Oracle Corporation)"
 )
 @Component
@@ -23,6 +23,7 @@ public class CityMapperImpl implements CityMapper {
         CityEntity cityEntity = new CityEntity();
 
         cityEntity.setCityName( cityCreateDTO.getCityName() );
+        cityEntity.setStateId( map( cityCreateDTO.getStateId() ) );
 
         return cityEntity;
     }
@@ -52,6 +53,9 @@ public class CityMapperImpl implements CityMapper {
 
         if ( cityCreateDTO.getCityName() != null ) {
             cityEntity.setCityName( cityCreateDTO.getCityName() );
+        }
+        if ( cityCreateDTO.getStateId() != null ) {
+            cityEntity.setStateId( map( cityCreateDTO.getStateId() ) );
         }
     }
 }
