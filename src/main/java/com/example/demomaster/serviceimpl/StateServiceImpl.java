@@ -47,7 +47,7 @@ public class StateServiceImpl implements StateService {
             Workbook workbook = new XSSFWorkbook();
             Sheet sheet = workbook.createSheet("States");
 
-            String[] columns = {"State ID", "State Name", "Created At", "Updated At", "Deleted At", "Status"};
+            String[] columns = {"State ID", "State Name"};
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             CellStyle headerStyle = workbook.createCellStyle();
@@ -66,10 +66,6 @@ public class StateServiceImpl implements StateService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(state.getStateId());
                 row.createCell(1).setCellValue(state.getStateName());
-                row.createCell(2).setCellValue(state.getCreatedAt() != null ? state.getCreatedAt().toString() : "");
-                row.createCell(3).setCellValue(state.getUpdatedAt() != null ? state.getUpdatedAt().toString() : "");
-                row.createCell(4).setCellValue(state.getDeletedAt() != null ? state.getDeletedAt().toString() : "");
-                row.createCell(5).setCellValue(state.getStatus().name());
             }
 
             // Set response for file download
