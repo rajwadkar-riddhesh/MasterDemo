@@ -66,6 +66,7 @@ public class StateServiceImpl implements StateService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(state.getStateId());
                 row.createCell(1).setCellValue(state.getStateName());
+                row.createCell(1).setCellValue(state.getStateName());
             }
 
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -99,7 +100,7 @@ public class StateServiceImpl implements StateService {
             throw new IllegalArgumentException("Only .xlsx files are supported");
         }
 
-        try(Workbook workbook = new XSSFWorkbook(file.getInputStream())){
+        Workbook workbook = new XSSFWorkbook(file.getInputStream());
             Sheet sheet = workbook.getSheetAt(0);
             DataFormatter formatter = new DataFormatter();
 
@@ -112,6 +113,7 @@ public class StateServiceImpl implements StateService {
                     headerSkipped = true;
                     continue;
                 }
+
                 if (isRowEmpty(row)) continue;
 
                 Cell idCell = row.getCell(0);
@@ -142,7 +144,6 @@ public class StateServiceImpl implements StateService {
                 batch.add(entity);
             }
             stateRepository.saveAll(batch);
-        }
     }
 //      public void importToExcel(MultipartFile file){
 //

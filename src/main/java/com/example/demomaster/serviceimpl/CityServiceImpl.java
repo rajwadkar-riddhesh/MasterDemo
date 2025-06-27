@@ -9,6 +9,10 @@ import com.example.demomaster.repository.CityRepository;
 import com.example.demomaster.repository.StateRepository;
 import com.example.demomaster.service.CityService;
 import com.example.demomaster.specification.CitySpecification;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.common.usermodel.fonts.FontHeader;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +20,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -80,5 +88,123 @@ public class CityServiceImpl implements CityService {
         }
         CityEntity patchedCity = cityRepository.save(patchCity);
         return cityMapper.toDTO(patchedCity);
+    }
+
+    @Override
+    public void exportCityDetails(HttpServletResponse response) throws IOException {
+        List<CityEntity> cities = cityRepository.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Cities");
+
+        String[] columns = {"CityID", "CityName", "StateName", "StateId"};
+
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        CellStyle headerStyle = workbook.createCellStyle();
+        headerStyle.setFont(headerFont);
+
+        Row headerRow = sheet.createRow(0);
+        for (int col = 0; col < columns.length; col++){
+            Cell cell = headerRow.createCell(col);
+            cell.setCellValue(columns[col]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowInx = 1;
+        for (CityEntity city : cities){
+            Row row = sheet.createRow(rowInx++);
+            row.createCell(0).setCellValue(city.getCityId());
+            row.createCell(1).setCellValue(city.getCityName());
+//            String stateId = city.getStateId() != null ? city.getStateId().getStateName() : "N/A";
+            row.createCell(2).setCellValue(city.getStateId().getStateName());
+            row.createCell(3).setCellValue(city.getStateId().getStateId());
+        }
+
+        response.setContentType("application/vnd.openxmlformats-officialdocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition","attachment; filename=cities.xlsx");
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+
+    public void importCityDetails(MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Excel File is Empty");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".xlsx")) {
+            throw new IllegalArgumentException("Only .xlsx files are supported");
+        }
+
+        Workbook workbook = new XSSFWorkbook(file.getInputStream());
+        Sheet sheet = workbook.getSheetAt(0);
+        DataFormatter formatter = new DataFormatter();
+
+        boolean headerSkipped = false;
+
+        List<CityEntity> batch = new ArrayList<>();
+
+        for (Row row : sheet) {
+            if (!headerSkipped) {
+                headerSkipped = true;
+                continue;
+            }
+            if (isRowEmpty(row)) continue;
+
+            Cell idCell = row.getCell(0);
+            Cell nameCell = row.getCell(1);
+            Cell sIdCell = row.getCell(2);
+
+            String idText = idCell == null ? "" : formatter.formatCellValue(idCell).trim();
+            String nameText = nameCell == null ? "" : formatter.formatCellValue(nameCell).trim();
+            String sIdText = sIdCell == null ? "" : formatter.formatCellValue(sIdCell).trim();
+
+            if (nameText.isBlank()) continue;
+
+            CityEntity cityEntity;
+
+            if (!idText.isBlank()) {
+                try {
+                    Long id = Long.valueOf(idText);
+                    cityEntity = cityRepository.findById(id).orElse(new CityEntity());
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid City ID format: " + idText);
+                }
+            } else {
+                cityEntity = new CityEntity();  // fallback if no ID
+            }
+
+            cityEntity.setCityName(nameText);
+
+            if (!sIdText.isBlank()) {
+                try {
+                    Long sId = Long.valueOf(sIdText);
+                    StateEntity state = stateRepository.findById(sId)
+                            .orElseThrow(()->new RuntimeException("No State found"));
+                    cityEntity.setStateId(state);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("No State ID format: " + sIdText);
+                }
+            } else {
+                cityEntity = new CityEntity();
+            }
+
+            cityEntity.setCityName(nameText);
+            batch.add(cityEntity);
+        }
+        cityRepository.saveAll(batch);
+    }
+
+    private boolean isRowEmpty (Row row){
+        if (row == null) {
+            return true;
+        }
+        for (Cell cell : row) {
+            if (cell != null && cell.getCellType() != CellType.BLANK) return false;
+        }
+        return true;
     }
 }
