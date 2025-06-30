@@ -7,10 +7,13 @@ import com.example.demomaster.enums.PincodeEnum;
 import com.example.demomaster.service.PincodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -64,5 +67,19 @@ public class PincodeController {
             description = "Update pincode status by pincode ID")
     public PincodeDTO patchPincodeDetails(@PathVariable Long pincodeId, @RequestParam PincodeEnum status){
         return pincodeService.patchPincodeDetails(pincodeId,status);
+    }
+
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    @Operation(summary = "Import Pincode details",
+            description = "Import Pincode details from provided excel")
+    public void importFromExcel(@RequestParam MultipartFile file) throws IOException {
+        pincodeService.importFromExcel(file);
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Export all pincode details",
+            description = "Export paginated list of all pincode details to excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException{
+        pincodeService.exportToExcel(response);
     }
 }

@@ -99,7 +99,7 @@ public class PincodeEntity {
         this.status = status;
     }
 
-    public CityEntity getCity() {
+    public CityEntity getCityId() {
         return cityId;
     }
 
