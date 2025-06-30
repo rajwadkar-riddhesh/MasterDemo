@@ -10,7 +10,6 @@ import com.example.demomaster.repository.StateRepository;
 import com.example.demomaster.service.CityService;
 import com.example.demomaster.specification.CitySpecification;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.poi.common.usermodel.fonts.FontHeader;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
@@ -19,11 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -174,7 +171,7 @@ public class CityServiceImpl implements CityService {
                     throw new IllegalArgumentException("Invalid City ID format: " + idText);
                 }
             } else {
-                cityEntity = new CityEntity();  // fallback if no ID
+                cityEntity = new CityEntity();
             }
 
             cityEntity.setCityName(nameText);
@@ -192,7 +189,7 @@ public class CityServiceImpl implements CityService {
                 cityEntity = new CityEntity();
             }
 
-            cityEntity.setCityName(nameText);
+            cityEntity.setStateId(cityEntity.getStateId());
             batch.add(cityEntity);
         }
         cityRepository.saveAll(batch);
