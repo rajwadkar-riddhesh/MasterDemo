@@ -138,7 +138,7 @@ public class PincodeServiceImpl implements PincodeService {
                 try {
                     Long cId = Long.valueOf(cIdText);
                     CityEntity entity = cityRepository.findById(cId)
-                            .orElseThrow(()-> new IllegalArgumentException("No city found"));
+                            .orElseThrow(()-> new IllegalArgumentException("No city id found"));
                     pincodeEntity.setCityId(entity);
                 }catch (NumberFormatException e){
                     throw new IllegalArgumentException("Invalid City ID:" + cIdText);
