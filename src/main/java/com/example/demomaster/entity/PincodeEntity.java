@@ -17,7 +17,7 @@ public class PincodeEntity {
     private Long pincodeId;
 
     @Column(name = "pincode")
-    private String pincode;
+    private String  pincode;
 
     @Column(name = "created_at")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

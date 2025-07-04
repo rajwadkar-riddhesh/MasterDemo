@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PincodeRepository extends JpaRepository<PincodeEntity, Long> {
     Page<PincodeEntity> findAll(Specification<PincodeEntity> specification, Pageable pageable);
+
+    PincodeEntity findByPincodeIgnoreCase(String pincode);
 }

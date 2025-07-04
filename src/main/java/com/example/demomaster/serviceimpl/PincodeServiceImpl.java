@@ -14,7 +14,7 @@ import com.example.demomaster.specification.PincodeSpecification;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.aspectj.weaver.loadtime.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,11 +26,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
-public class PincodeServiceImpl implements PincodeService {
+public class PincodeServiceImpl<excelDataDto> implements PincodeService {
 
+    @Autowired
     private PincodeRepository pincodeRepository;
     private CityRepository cityRepository;
     private PincodeMapper pincodeMapper;
@@ -190,6 +192,20 @@ public class PincodeServiceImpl implements PincodeService {
 
     }
 
+    @Override
+    public void saveItemWriter(PincodeCreateDTO pincodeCreateDTO) {
+
+        Optional<PincodeEntity> pincodeEntity = Optional.ofNullable(pincodeRepository.findByPincodeIgnoreCase(pincodeCreateDTO.getPincode()));
+        PincodeEntity pincode = new PincodeEntity();
+        if(pincodeEntity.isEmpty()){
+            pincode.setPincode(pincodeCreateDTO.getPincode());
+            CityEntity city = cityRepository.findById(pincodeCreateDTO.getCityId())
+                            .orElseThrow(() -> new RuntimeException("City not found with ID: " + pincodeCreateDTO.getCityId()));
+            pincode.setCityId(city);
+            pincodeRepository.save(pincode);
+        }
+
+    }
 
     private boolean isRowEmpty (Row row){
         if (row == null) {
